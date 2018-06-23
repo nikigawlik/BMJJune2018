@@ -5,12 +5,17 @@ public class TargetRecognizer : MonoBehaviour, ITrackableEventHandler
 {
     public TrackableBehaviour target;
 
+    public GameController gameController;
+
+    public bool isTracking = false;
+    public string targetName;
+
     void Start()
     {
         target = GetComponent<TrackableBehaviour>();
         target.RegisterTrackableEventHandler(this);
     
-    
+        gameController.AddTarget(this);
     }
      
     public void OnTrackableStateChanged(
@@ -23,12 +28,13 @@ public class TargetRecognizer : MonoBehaviour, ITrackableEventHandler
             newStatus == TrackableBehaviour.Status.EXTENDED_TRACKED)
         {
             // Play audio when target is found
-            Debug.Log(target.TrackableName);
-            
+            // Debug.Log(target.TrackableName);
+            isTracking = true;
+            targetName = target.TrackableName;
         }
         else
         {
-
+            isTracking = false;
         }
     }   
 }
