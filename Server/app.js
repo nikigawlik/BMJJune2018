@@ -91,7 +91,7 @@ async function main() {
         for (var key in gameState.players)
             players.push(gameState.players[key]);
         res.setHeader('Content-Type', 'application/json');
-        res.send(JSON.stringify(players));
+        res.send(JSON.stringify({ players: players }));
     });
 
     express.get('/', function(req, res) {
