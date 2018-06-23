@@ -8,8 +8,8 @@ public class TargetSpawner : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        Transform test1 = Instantiate(prefab, new Vector3(2.0F, 0, 0), Quaternion.identity);
-        ImageTargetBehaviour test2 = test1.GetComponent<ImageTargetBehaviour>();
+        // Transform test1 = Instantiate(prefab, new Vector3(2.0F, 0, 0), Quaternion.identity);
+        // ImageTargetBehaviour test2 = test1.GetComponent<ImageTargetBehaviour>();
  
     }
 	
