@@ -1,0 +1,22 @@
+<html>
+<head>
+    <title>Party Spy</title>
+    <script src='jquery-3.3.1.min.js'></script>
+    <script src='knockout-3.4.2.js'></script>
+    <script src='game.js'></script>
+    <link rel='stylesheet' href='style.css' />
+</head>
+
+<body>
+    <label><div class='left'>Server Address:</div><input data-bind='value: serverAddress'></input></label>
+    <label><div class='left'>Player Name:</div><input data-bind='value: playerName'></input></label>
+    <label><div class='left'>Player Id:</div><span data-bind='text: playerId'></span></label>
+    <label><div class='left'>Image:</div><input type='file' id='inputImage'></input></label>
+    <label><button data-bind='click: buttonLogin'>Login</button></label>
+    <label><button data-bind='click: buttonLogout'>Logout</button></label>
+    <label><button data-bind='click: buttonPlayers'>Get Players</button></label>
+    <label><button data-bind='click: buttonAvatar'>Upload Image as Avatar</button></label>
+    <label><button data-bind='click: buttonPhoto'>Upload Image as Photo</button></label>
+    <pre data-bind='text: ajaxResponse'></pre>
+</body>
+</html>

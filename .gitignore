@@ -35,5 +35,6 @@ sysinfo.txt
 *.apk
 *.unitypackage
 
+Server/avatars/*
 Server/photos/*
 Server/node_modules
