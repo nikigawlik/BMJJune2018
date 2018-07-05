@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Networking;
+using System.Text;
 
 public class GameController : MonoBehaviour {
 	public Button connectButton;
@@ -15,8 +17,11 @@ public class GameController : MonoBehaviour {
 	public GameObject leaderboard;
 	public GameObject scrollable;
 	public GameObject attackScreen;
+	public GameObject loadingScreen;
 
 	private List<TargetRecognizer> possibleTargets;
+
+	private string serverAddress;
 
 	void Awake () {
 		possibleTargets = new List<TargetRecognizer>();
@@ -28,11 +33,53 @@ public class GameController : MonoBehaviour {
 		hitPersonButton.onClick.AddListener(HitPerson);
 	}
 
+    public string Url(string path) {
+        return "http://" + serverAddress + ":3000/" + path;
+    }
+
+	public delegate void Callback(string message);
+
+	public IEnumerator Get(string path, Callback onSuccess, Callback onFail) {
+		string url = Url(path);
+		UnityWebRequest request = null;
+
+		try {
+			request = UnityWebRequest.Get(url);
+		} 
+		catch(System.UriFormatException e) {
+			if(onFail != null) onFail(e.Message);
+			yield break;
+		}
+
+		using (request) {
+			yield return request.SendWebRequest();
+			if (request.isNetworkError || request.isHttpError) {
+				if(onFail != null) onFail(request.error);
+				yield break;
+			}
+
+			byte[] results = request.downloadHandler.data;
+			string str = Encoding.Default.GetString(results);
+			if(onSuccess != null) onSuccess(str);
+		}
+    }
+
 	void TryConnectToServer() {
-		string address = serverAddressField.text;
-		// TODO connect to server
-		splashScreen.SetActive(false);
-		attackScreen.SetActive(true);
+		serverAddress = serverAddressField.text;
+		// TODO show some loading circle or similar
+		loadingScreen.SetActive(true);
+		StartCoroutine(Get("", (string message) => {
+			// success
+			loadingScreen.SetActive(false);
+			
+			splashScreen.SetActive(false);
+			attackScreen.SetActive(true);
+		}, (string message) => {
+			// fail
+			// TODO show some warning
+			Debug.Log("Error: " + message);
+			loadingScreen.SetActive(false);
+		}));
 	}
 
 	public void AddTarget(TargetRecognizer t) {
