@@ -27,6 +27,7 @@ public class GameController : MonoBehaviour {
 	public Button hitPersonButton;
 	public RawImage image;
 	public GameObject frame;
+	public Text ingameInfoText;
 
 	
     [Serializable]
@@ -144,6 +145,8 @@ public class GameController : MonoBehaviour {
 
 			loginScreen.SetActive(false);
 			attackScreen.SetActive(true);
+
+			ingameInfoText.text = "Your Name: " + p.myData.name + " Your ID: " + p.myData.id;
 		}, (string message) => {
 			// fail
 			Debug.Log("Error: " + message);
