@@ -4,20 +4,36 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Networking;
 using System.Text;
+using System;
 
 public class GameController : MonoBehaviour {
-	public Button connectButton;
-	public InputField serverAddressField;
-
-	public Button hitPersonButton;
-	public RawImage image;
-	public GameObject frame;
-
+	[Header("Screen references")]
 	public GameObject splashScreen;
+	public GameObject loginScreen;
 	public GameObject leaderboard;
 	public GameObject scrollable;
 	public GameObject attackScreen;
 	public GameObject loadingScreen;
+
+	[Header("Connect Screen UI elements")]
+	public InputField serverAddressField;
+	public Button connectButton;
+
+	[Header("Login Screen UI elements")]
+	public InputField playerNameField;
+	public Button loginButton;
+
+	[Header("Hit Screen UI elements")]
+	public Button hitPersonButton;
+	public RawImage image;
+	public GameObject frame;
+
+	
+    [Serializable]
+    public class LoginResponse {
+        public string message;
+        public Player.PlayerType player;
+    }
 
 	private List<TargetRecognizer> possibleTargets;
 
@@ -29,7 +45,7 @@ public class GameController : MonoBehaviour {
 
 	private void Start() {
 		connectButton.onClick.AddListener(TryConnectToServer);
-
+		loginButton.onClick.AddListener(TryLogin);
 		hitPersonButton.onClick.AddListener(HitPerson);
 	}
 
@@ -64,19 +80,72 @@ public class GameController : MonoBehaviour {
 		}
     }
 
+	public IEnumerator Post(string path, string data, Callback onSuccess, Callback onFail) {
+		string url = Url(path);
+		UnityWebRequest request = null;
+
+		try {
+			// create post request semi-manually, bec. Unity's implementation is shit
+			request = new UnityWebRequest(url, "POST");
+			byte[] bodyRaw = Encoding.UTF8.GetBytes(data);
+			request.uploadHandler = (UploadHandler) new UploadHandlerRaw(bodyRaw);
+			request.downloadHandler = (DownloadHandler) new DownloadHandlerBuffer();
+			request.SetRequestHeader("Content-Type", "application/json");
+		} 
+		catch(System.UriFormatException e) {
+			if(onFail != null) onFail(e.Message);
+			yield break;
+		}
+
+		using (request) {
+			yield return request.SendWebRequest();
+			if (request.isNetworkError || request.isHttpError) {
+				if(onFail != null) onFail(request.error);
+				yield break;
+			}
+
+			byte[] results = request.downloadHandler.data;
+			string str = Encoding.Default.GetString(results);
+			if(onSuccess != null) onSuccess(str);
+		}
+    }
+
 	void TryConnectToServer() {
 		serverAddress = serverAddressField.text;
-		// TODO show some loading circle or similar
+		// show loading circle
 		loadingScreen.SetActive(true);
 		StartCoroutine(Get("", (string message) => {
 			// success
 			loadingScreen.SetActive(false);
 			
 			splashScreen.SetActive(false);
-			attackScreen.SetActive(true);
+			loginScreen.SetActive(true);
 		}, (string message) => {
 			// fail
 			// TODO show some warning
+			Debug.Log("Error: " + message);
+			loadingScreen.SetActive(false);
+		}));
+	}
+
+	void TryLogin() {
+		Player p = GetComponent<Player>();
+		p.SetName(playerNameField.text);
+
+		string requestJSONData = JsonUtility.ToJson(p.myData);
+
+		loadingScreen.SetActive(true);
+		StartCoroutine(Post("login", requestJSONData, (string jsonData) => {
+			// success
+			loadingScreen.SetActive(false);
+			
+			LoginResponse loginResponse = JsonUtility.FromJson<LoginResponse>(jsonData);
+			p.myData = loginResponse.player;
+
+			loginScreen.SetActive(false);
+			attackScreen.SetActive(true);
+		}, (string message) => {
+			// fail
 			Debug.Log("Error: " + message);
 			loadingScreen.SetActive(false);
 		}));
@@ -89,7 +158,6 @@ public class GameController : MonoBehaviour {
 	public List<TargetRecognizer> getTargets() {
 		return possibleTargets;
 	}
-
 
 	void HitPerson() {
 		// get available markers
@@ -111,7 +179,6 @@ public class GameController : MonoBehaviour {
 	public IEnumerator TakeSnapshot()
 	{
 		yield return frameEnd;
-
 
 		float cutoff = 0.125f * Screen.height;
 		int h = (int) (Screen.height - cutoff * 2);
