@@ -38,8 +38,6 @@ public class GameController : MonoBehaviour {
 
 	private List<TargetRecognizer> possibleTargets;
 
-	private string serverAddress;
-
 	void Awake () {
 		possibleTargets = new List<TargetRecognizer>();
 	}
@@ -50,72 +48,13 @@ public class GameController : MonoBehaviour {
 		hitPersonButton.onClick.AddListener(HitPerson);
 	}
 
-    public string Url(string path) {
-        return "http://" + serverAddress + ":3000/" + path;
-    }
-
-	public delegate void Callback(string message);
-
-	public IEnumerator Get(string path, Callback onSuccess, Callback onFail) {
-		string url = Url(path);
-		UnityWebRequest request = null;
-
-		try {
-			request = UnityWebRequest.Get(url);
-		} 
-		catch(System.UriFormatException e) {
-			if(onFail != null) onFail(e.Message);
-			yield break;
-		}
-
-		using (request) {
-			yield return request.SendWebRequest();
-			if (request.isNetworkError || request.isHttpError) {
-				if(onFail != null) onFail(request.error);
-				yield break;
-			}
-
-			byte[] results = request.downloadHandler.data;
-			string str = Encoding.Default.GetString(results);
-			if(onSuccess != null) onSuccess(str);
-		}
-    }
-
-	public IEnumerator Post(string path, string data, Callback onSuccess, Callback onFail) {
-		string url = Url(path);
-		UnityWebRequest request = null;
-
-		try {
-			// create post request semi-manually, bec. Unity's implementation is shit
-			request = new UnityWebRequest(url, "POST");
-			byte[] bodyRaw = Encoding.UTF8.GetBytes(data);
-			request.uploadHandler = (UploadHandler) new UploadHandlerRaw(bodyRaw);
-			request.downloadHandler = (DownloadHandler) new DownloadHandlerBuffer();
-			request.SetRequestHeader("Content-Type", "application/json");
-		} 
-		catch(System.UriFormatException e) {
-			if(onFail != null) onFail(e.Message);
-			yield break;
-		}
-
-		using (request) {
-			yield return request.SendWebRequest();
-			if (request.isNetworkError || request.isHttpError) {
-				if(onFail != null) onFail(request.error);
-				yield break;
-			}
-
-			byte[] results = request.downloadHandler.data;
-			string str = Encoding.Default.GetString(results);
-			if(onSuccess != null) onSuccess(str);
-		}
-    }
-
 	void TryConnectToServer() {
-		serverAddress = serverAddressField.text;
+		WebRequestHandler wrh = GetComponent<WebRequestHandler>();
+		wrh.serverAddress = serverAddressField.text;
+
 		// show loading circle
 		loadingScreen.SetActive(true);
-		StartCoroutine(Get("", (string message) => {
+		StartCoroutine(wrh.Get("", (string message) => {
 			// success
 			loadingScreen.SetActive(false);
 			
@@ -130,13 +69,15 @@ public class GameController : MonoBehaviour {
 	}
 
 	void TryLogin() {
+		WebRequestHandler wrh = GetComponent<WebRequestHandler>();
 		Player p = GetComponent<Player>();
+		
 		p.SetName(playerNameField.text);
 
 		string requestJSONData = JsonUtility.ToJson(p.myData);
 
 		loadingScreen.SetActive(true);
-		StartCoroutine(Post("login", requestJSONData, (string jsonData) => {
+		StartCoroutine(wrh.Post("login", requestJSONData, (string jsonData) => {
 			// success
 			loadingScreen.SetActive(false);
 			

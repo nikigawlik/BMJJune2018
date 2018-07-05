@@ -4763,6 +4763,7 @@ GameObject:
   - component: {fileID: 1359699848}
   - component: {fileID: 1359699847}
   - component: {fileID: 1359699849}
+  - component: {fileID: 1359699850}
   m_Layer: 0
   m_Name: GameController
   m_TagString: Untagged
@@ -4825,6 +4826,18 @@ MonoBehaviour:
     score: 0
     photo: 
     timestamp: 
+--- !u!114 &1359699850
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1359699846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2f49345df9c75142aa435b11542ede9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  serverAddress: 
 --- !u!21 &1419025450
 Material:
   serializedVersion: 6
